@@ -387,11 +387,16 @@
 <script>
 $(document).ready(function() {
   var cdNone = {orderable: false, targets: 0};
-  $('#partsTable').DataTable({ pageLength: 25, order: [[3, 'asc']], columnDefs: [cdNone] });
-  $('#purchasesTable').DataTable({ pageLength: 25, order: [[8, 'desc']], columnDefs: [cdNone] });
-  $('#consumptionTable').DataTable({ pageLength: 25, order: [[9, 'desc']], columnDefs: [cdNone] });
-  if ($('#partReqTable tbody tr td').length > 1) $('#partReqTable').DataTable({ pageLength: 25, order: [], columnDefs: [cdNone] });
-  if ($('#sourcingTable tbody tr td').length > 1) $('#sourcingTable').DataTable({ pageLength: 25, order: [], columnDefs: [cdNone] });
+  if (!$.fn.dataTable.isDataTable('#partsTable'))
+    $('#partsTable').DataTable({ pageLength: 25, order: [[3, 'asc']], columnDefs: [cdNone] });
+  if (!$.fn.dataTable.isDataTable('#purchasesTable'))
+    $('#purchasesTable').DataTable({ pageLength: 25, order: [[8, 'desc']], columnDefs: [cdNone] });
+  if (!$.fn.dataTable.isDataTable('#consumptionTable'))
+    $('#consumptionTable').DataTable({ pageLength: 25, order: [[9, 'desc']], columnDefs: [cdNone] });
+  if (!$.fn.dataTable.isDataTable('#partReqTable') && $('#partReqTable tbody tr td').length > 1)
+    $('#partReqTable').DataTable({ pageLength: 25, order: [], columnDefs: [cdNone] });
+  if (!$.fn.dataTable.isDataTable('#sourcingTable') && $('#sourcingTable tbody tr td').length > 1)
+    $('#sourcingTable').DataTable({ pageLength: 25, order: [], columnDefs: [cdNone] });
 });
 
 // Handover modal — populate from the clicked button's data-* attributes
