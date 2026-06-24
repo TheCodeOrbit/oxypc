@@ -25,21 +25,21 @@
 {% for device, lot_number in devices %}
 {% set iqc = iqc_map.get(device.id|string) %}
 {% set rjs = repairs_map.get(device.id|string, []) %}
-<div class="card border-0 shadow-sm mb-3">
+<div class="card border-0 shadow-sm mb-3" style="max-height:460px">
   <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-    <span class="fw-semibold"><code>{{ device.barcode }}</code> — {{ device.brand or '' }} {{ device.model or '' }}
+    <span><a href="/devices/{{ device.barcode }}" class="font-monospace small text-decoration-none" title="View device detail">{{ device.barcode }}</a> — <span class="fw-semibold fs-6">{{ device.brand or '' }} {{ device.model or '' }}</span>
       <span class="badge bg-secondary ms-1">{{ lot_number }}</span></span>
     <span class="small">Current Grade:
       {% if device.grade %}<span class="badge bg-info text-dark">{{ device.grade.value }}</span>{% else %}<span class="text-muted">—</span>{% endif %}
     </span>
   </div>
-  <div class="card-body">
+  <div class="card-body" style="overflow-y:auto">
     <div class="row g-3">
 
       <!-- Column 1: all device fields from IQC Entry (read-only) -->
       <div class="col-lg-4">
         <h6 class="small text-uppercase text-muted fw-bold">IQC Details <span class="badge bg-light text-muted border ms-1">read-only</span></h6>
-        <div style="max-height:560px;overflow:auto">
+        <div>
         <table class="table table-sm small mb-0">
           {{ fld('Serial No.', device.serial_no) }}
           {{ fld('Device Type', device.device_type) }}
