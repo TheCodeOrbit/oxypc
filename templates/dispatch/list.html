@@ -81,7 +81,7 @@
         <i class="bi bi-telephone me-2"></i>Telecaller Requests
         <span class="badge bg-warning text-dark ms-1">{{ requests|selectattr('status','equalto','requested')|list|length }} pending</span>
       </span>
-      <div class="d-flex gap-2 flex-wrap">
+      <div class="d-flex gap-2 flex-nowrap ms-auto justify-content-end">
         <select id="tcFilter" class="form-select form-select-sm" style="min-width:180px">
           <option value="">All Telecallers</option>
           {% for uname, name in (telecaller_options if telecaller_options is defined else []) %}
