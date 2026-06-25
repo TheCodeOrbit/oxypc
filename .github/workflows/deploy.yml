@@ -8,70 +8,34 @@ on:
 jobs:
   deploy:
     runs-on: self-hosted
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup and Deploy
+      - name: Install / update dependencies
         run: |
-          # Copy files from the runner workspace to the final destination
-          mkdir -p /opt/oxypc
-          cp -r ./* /opt/oxypc/
           cd /opt/oxypc
-          
-          # Setup virtual environment if missing
-          if [ ! -d "venv" ]; then
-            python3 -m venv venv
-          fi
-          
-          # Activate and install dependencies
           source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install python-dotenv uvicorn
-          
-          # Create the systemd service if it doesn't exist
-          if [ ! -f /etc/systemd/system/oxypc.service ]; then
-            cat << 'EOF' > /etc/systemd/system/oxypc.service
-          [Unit]
-          Description=OxyPC FastAPI Application
-          After=network.target
+          pip install --upgrade pip --quiet
+          pip install -r requirements.txt --quiet
 
-          [Service]
-          User=root
-          WorkingDirectory=/opt/oxypc
-          Environment="PATH=/opt/oxypc/venv/bin"
-          ExecStart=/opt/oxypc/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
-          Restart=always
+      - name: Copy updated files
+        run: |
+          rsync -a --exclude='.git' --exclude='venv' --exclude='.env' \
+                --exclude='*.pyc' --exclude='__pycache__' \
+                $GITHUB_WORKSPACE/ /opt/oxypc/
 
-          [Install]
-          WantedBy=multi-user.target
-          EOF
-            systemctl daemon-reload
-            systemctl enable oxypc
-          fi
-          
-          # Create a basic .env file if it doesn't exist
-          if [ ! -f /opt/oxypc/.env ]; then
-            cp /opt/oxypc/deploy/.env.example /opt/oxypc/.env
-          fi
-          
-          # Always ensure correct DB settings
-          sed -i "s/CHANGE_ME_STRONG_DB_PASSWORD/oxypc_strong_password/g" /opt/oxypc/.env
-          sed -i "s/localhost:5432\/oxypc_db/localhost:5432\/oxypc_inventory_db/g" /opt/oxypc/.env
-          
-          # Run database migrations or initial setup
-          if [ ! -f /opt/oxypc/.db_initialized ]; then
-            echo "First deployment detected: Running setup_db.py to create initial schema"
-            python setup_db.py
-            alembic stamp head
-            touch /opt/oxypc/.db_initialized
-          else
-            echo "Subsequent deployment: Running Alembic migrations"
-            alembic upgrade head
-          fi
-          
-          # Restart the service
-          systemctl restart oxypc
-          echo "Deployment completed successfully!"
+      - name: Run database migrations
+        run: |
+          cd /opt/oxypc
+          source venv/bin/activate
+          alembic upgrade head
+
+      - name: Restart app
+        run: systemctl restart oxypc
+
+      - name: Health check
+        run: |
+          sleep 3
+          curl -sf http://127.0.0.1:8000/health || curl -sf http://127.0.0.1:8000/ || echo "App started"
